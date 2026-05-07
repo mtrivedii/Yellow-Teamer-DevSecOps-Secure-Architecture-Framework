@@ -89,7 +89,7 @@ The full red team report is in the `/Documentation` folder.
 
 ## Documentation
 
-All technical documentation — Body of Knowledge, architecture diagrams, threat model, data flow, compliance mapping, and OWASP ZAP report — is in the `/Documentation` folder.
+All technical documentation — Body of Knowledge, architecture diagrams, threat model, data flow, compliance mapping, and OWASP ZAP report, is in the `/Documentation` folder.
 
 ---
 
