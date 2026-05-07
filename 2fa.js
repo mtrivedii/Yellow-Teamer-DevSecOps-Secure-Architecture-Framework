@@ -221,7 +221,7 @@ router.post('/validate', async (req, res) => {
         email: user.email,
         role: user.Role 
       },
-      process.env.JWT_SECRET || 'dev-secret-key',
+      process.env.JWT_SECRET, // Ensure JWT_SECRET is set in your environment
       { expiresIn: '1h' }
     );
     

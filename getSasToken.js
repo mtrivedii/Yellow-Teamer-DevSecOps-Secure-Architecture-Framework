@@ -1,24 +1,34 @@
 const { BlobServiceClient, StorageSharedKeyCredential, generateBlobSASQueryParameters, BlobSASPermissions } = require("@azure/storage-blob");
-const { extractUserInfo } = require('./auth-utilities');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 
 async function handler(req, res) {
   try {
-    // Add CORS headers for browser compatibility
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // CORS restricted to allowed origins
+    const allowedOrigins = ['https://maanitwebapp.com', 'http://localhost:3000'];
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
     // Handle OPTIONS requests
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
 
-    // Comment out authentication check to allow anonymous uploads
-    // const userInfo = extractUserInfo(req);
-    // if (!userInfo.isAuthenticated) {
-    //   return res.status(401).json({ error: "Unauthorized" });
-    // }
+    // Authenticate via JWT cookie
+    const authToken = req.cookies?.auth_token;
+    if (!authToken) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      jwt.verify(authToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     const blobName = req.query.blobName;
     if (!blobName || typeof blobName !== 'string' || blobName.length > 256) {
@@ -28,16 +38,16 @@ async function handler(req, res) {
     // Block script files by extension
     const fileExtension = path.extname(blobName).toLowerCase();
     const blockedExtensions = [
-      '.js', '.jsx', '.ts', '.tsx', '.php', '.asp', '.aspx', 
-      '.cgi', '.pl', '.py', '.sh', '.bat', '.cmd', '.ps1', 
+      '.js', '.jsx', '.ts', '.tsx', '.php', '.asp', '.aspx',
+      '.cgi', '.pl', '.py', '.sh', '.bat', '.cmd', '.ps1',
       '.vbs', '.vbe', '.jsp', '.html', '.htm', '.exe'
     ];
-    
+
     if (blockedExtensions.includes(fileExtension)) {
       console.log(`Blocked upload of script file: ${blobName}`);
       return res.status(403).json({ error: "Script files are not allowed" });
     }
-    
+
     // Block script content types
     const contentType = req.query.contentType;
     const blockedContentTypes = [
@@ -49,7 +59,7 @@ async function handler(req, res) {
       'text/php',
       'application/x-httpd-php'
     ];
-    
+
     if (contentType && blockedContentTypes.includes(contentType)) {
       console.log(`Blocked upload with script content type: ${contentType}`);
       return res.status(403).json({ error: "Script content types are not allowed" });
@@ -58,31 +68,28 @@ async function handler(req, res) {
     // Sanitize the filename
     const safeFileName = sanitizeFileName(blobName);
 
-    const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME || "secureapprga106";
+    const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
     const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
     const containerName = "secure-uploads";
 
-    if (!accountKey) {
+    if (!accountName || !accountKey) {
       return res.status(500).json({ error: "Storage credentials not configured" });
     }
 
-    // First check if container exists and create it if not
+    // Check if container exists and create it if not
     try {
       const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
       const blobServiceClient = new BlobServiceClient(
         `https://${accountName}.blob.core.windows.net`,
         sharedKeyCredential
       );
-      
-      // Get container client
+
       const containerClient = blobServiceClient.getContainerClient(containerName);
-      
-      // Create container if it doesn't exist
+
       const containerExists = await containerClient.exists();
       if (!containerExists) {
         console.log(`Creating container: ${containerName}`);
         await containerClient.create();
-        // Set container public access level to private
         await containerClient.setAccessPolicy('none');
       }
     } catch (error) {
@@ -101,7 +108,7 @@ async function handler(req, res) {
     }, sharedKeyCredential).toString();
 
     const sasUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${encodeURIComponent(safeFileName)}?${sasToken}`;
-    return res.status(200).json({ 
+    return res.status(200).json({
       sasUrl,
       originalName: blobName,
       storedName: safeFileName

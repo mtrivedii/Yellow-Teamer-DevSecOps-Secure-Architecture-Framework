@@ -12,14 +12,20 @@ let sqlPool = null;
 async function getSqlPool() {
   if (sqlPool) return sqlPool;
 
+  const server = process.env.DB_SERVER;
+  const database = process.env.DB_NAME;
+
+  if (!server || !database) {
+    throw new Error('DB_SERVER or DB_NAME environment variables are not defined.');
+  }
+
   // Acquire an access token for Azure SQL
   const credential = new DefaultAzureCredential();
   const tokenResponse = await credential.getToken('https://database.windows.net/.default');
 
-  // Build the config object for mssql
   const config = {
-    server: 'maanit-server.database.windows.net', // Your server name
-    database: 'maanit-db',                        // Your DB name
+    server,
+    database,
     options: {
       encrypt: true,
       trustServerCertificate: false
@@ -63,7 +69,7 @@ function validateRegistration(req, res, next) {
   next();
 }
 
-// Rate limiting middleware (simple implementation)
+// Rate limiting middleware
 const registrationAttempts = new Map();
 function rateLimit(req, res, next) {
   const ip = req.ip || req.connection.remoteAddress;
@@ -102,20 +108,20 @@ router.post('/', rateLimit, validateRegistration, async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insert user into database (let SQL Server generate the ID)
+    // Insert user into database
     const insertQuery = `
       INSERT INTO dbo.users (
-        email, 
-        password, 
-        Role, 
-        status, 
+        email,
+        password,
+        Role,
+        status,
         registration_complete
       )
       VALUES (
-        @email, 
-        @passwordHash, 
-        'user', 
-        'Active', 
+        @email,
+        @passwordHash,
+        'user',
+        'Active',
         1
       );
       SELECT SCOPE_IDENTITY() AS newId;

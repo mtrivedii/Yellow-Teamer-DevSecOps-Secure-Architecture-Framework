@@ -28,7 +28,7 @@ async function requireAdminDb(req, res, next) {
   if (authToken) {
     try {
       // Verify the JWT token
-      const decodedToken = jwt.verify(authToken, process.env.JWT_SECRET || 'dev-secret-key');
+      const decodedToken = jwt.verify(authToken, process.env.JWT_SECRET); // Ensure JWT_SECRET is set in your environment
       console.log('JWT token found and verified:', decodedToken);
       
       // Check if user has admin role in the token
