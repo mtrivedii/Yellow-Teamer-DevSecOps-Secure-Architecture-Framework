@@ -1,6 +1,6 @@
 # Secure Azure Web Application
 
-**Status: Archived — Azure resources have been decommissioned.**
+**Status: Archived - Azure resources have been decommissioned.**
 
 A secure, full-stack web application deployed on Microsoft Azure, built as part of the *Advanced Cyber Security* course at Fontys University of Applied Sciences. The project covers architecture design, threat modelling, implementation, and post-deployment security testing.
 
@@ -69,19 +69,19 @@ Full justification for each change is documented in the Body of Knowledge (`/Doc
 
 The application was subject to two rounds of independent testing:
 
-**OWASP ZAP (DAST)** — Post-deployment dynamic scan. Zero high-severity findings. Four medium-severity findings identified and reviewed (CSP configuration, cookie flags, cache headers).
+**OWASP ZAP (DAST)** - Post-deployment dynamic scan. Zero high-severity findings. Four medium-severity findings identified and reviewed (CSP configuration, cookie flags, cache headers).
 
-**Hacking Week (Red Team)** — The application was targeted by red teamers during a dedicated adversarial testing week. Findings and remediation status:
+**Hacking Week (Red Team)** - The application was targeted by red teamers during a dedicated adversarial testing week. Findings and remediation status:
 
 | Finding | Status |
 |---|---|
-| JWT stored in localStorage; role validation done client-side | Fixed — tokens moved to `httpOnly` cookies with `Secure` and `SameSite` flags |
-| 2FA endpoint lacked rate limiting; user IDs enumerable via API | Partially addressed — rate limiting added; enumeration not fully resolved |
-| File upload bypass via `.php.jpg` extension and modified `Content-Type` headers | Partially addressed — server-side extension and MIME blocklist added; magic byte inspection not implemented |
-| WAF operating in detection mode rather than prevention mode | Fixed — WAF switched to prevention mode with 20+ custom rules |
-| IP-based rate limiting bypassed via VPN/Tor | Not fully addressed — requires IP intelligence services beyond project scope |
-| CSP uses `unsafe-inline` for `script-src` and `style-src` | Not fully addressed — nonce-based CSP not implemented |
-| Slow-rate directory enumeration not detected | Not addressed — requires behavioural anomaly detection |
+| JWT stored in localStorage; role validation done client-side | Fixed - tokens moved to `httpOnly` cookies with `Secure` and `SameSite` flags |
+| 2FA endpoint lacked rate limiting; user IDs enumerable via API | Partially addressed - rate limiting added; enumeration not fully resolved |
+| File upload bypass via `.php.jpg` extension and modified `Content-Type` headers | Partially addressed - server-side extension and MIME blocklist added; magic byte inspection not implemented |
+| WAF operating in detection mode rather than prevention mode | Fixed - WAF switched to prevention mode with 20+ custom rules |
+| IP-based rate limiting bypassed via VPN/Tor | Not fully addressed - requires IP intelligence services beyond project scope |
+| CSP uses `unsafe-inline` for `script-src` and `style-src` | Not fully addressed - nonce-based CSP not implemented |
+| Slow-rate directory enumeration not detected | Not addressed - requires behavioural anomaly detection |
 
 The full red team report is in the `/Documentation` folder.
 
@@ -89,7 +89,7 @@ The full red team report is in the `/Documentation` folder.
 
 ## Documentation
 
-All technical documentation — Body of Knowledge, architecture diagrams, threat model, data flow, compliance mapping, and OWASP ZAP report, is in the `/Documentation` folder.
+All technical documentation - Body of Knowledge, architecture diagrams, threat model, data flow, compliance mapping, and OWASP ZAP report, is in the `/Documentation` folder.
 
 ---
 
